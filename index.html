@@ -46,20 +46,28 @@ color:#4cafef;
 #rightPanel{
 display:flex;
 flex-direction:column;
-align-items:flex-end;
-}
-
-#hearts{
-font-size:22px;
+align-items:center;
+width:110px;
 }
 
 #hints{
 font-size:20px;
-cursor:pointer;
+display:flex;
+justify-content:center;
+width:100%;
+margin-bottom:4px;
+}
+
+#hearts{
+font-size:22px;
+display:flex;
+justify-content:center;
+width:100%;
 }
 
 .hint{
-margin-left:4px;
+margin:0 2px;
+cursor:pointer;
 }
 
 #timer{
@@ -101,7 +109,7 @@ padding:5px;
 font-size:12px;
 line-height:1.1;
 
-white-space:nowrap;   /* verhindert Zeilenumbruch */
+white-space:nowrap;
 
 cursor:pointer;
 }
@@ -222,7 +230,7 @@ function randReaction(){
 return reactions[Math.floor(Math.random()*reactions.length)]
 }
 
-/* Board erzeugen mit garantierter Lösung */
+/* Board erzeugen */
 
 function generateBoard(){
 
@@ -247,8 +255,6 @@ let rr=randReaction()
 board.push(Math.random()<0.5?rr.a:rr.b)
 
 }
-
-/* mischen */
 
 board.sort(()=>Math.random()-0.5)
 
@@ -345,18 +351,24 @@ bulbs[index].innerText=""
 
 let cells=[...document.querySelectorAll(".cell")]
 
-let marked=[]
+let pair=[]
 
 cells.forEach(c=>{
-if(solutionPair.includes(c.innerText)){
-marked.push(c)
+if(c.innerText==solutionPair[0] && pair.length==0){
+pair.push(c)
 }
 })
 
-marked.forEach(c=>c.classList.add("hintMark"))
+cells.forEach(c=>{
+if(c.innerText==solutionPair[1] && pair.length==1){
+pair.push(c)
+}
+})
+
+pair.forEach(c=>c.classList.add("hintMark"))
 
 setTimeout(()=>{
-marked.forEach(c=>c.classList.remove("hintMark"))
+pair.forEach(c=>c.classList.remove("hintMark"))
 },1500)
 
 }
