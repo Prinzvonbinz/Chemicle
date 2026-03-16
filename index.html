@@ -43,8 +43,23 @@ font-weight:bold;
 color:#4cafef;
 }
 
+#rightPanel{
+display:flex;
+flex-direction:column;
+align-items:flex-end;
+}
+
 #hearts{
-font-size:24px;
+font-size:22px;
+}
+
+#hints{
+font-size:20px;
+cursor:pointer;
+}
+
+.hint{
+margin-left:4px;
 }
 
 #timer{
@@ -83,15 +98,21 @@ align-items:center;
 text-align:center;
 padding:5px;
 
-font-size:13px;
+font-size:12px;
 line-height:1.1;
 
-word-break:break-word;
+white-space:nowrap;   /* verhindert Zeilenumbruch */
+
 cursor:pointer;
 }
 
 .cell.selected{
 background:#4cafef;
+}
+
+.cell.hintMark{
+background:#ffd54f;
+color:black;
 }
 
 #panel{
@@ -125,8 +146,21 @@ color:white;
 <h1>Chemicle</h1>
 
 <div id="top">
+
 <div id="target"></div>
+
+<div id="rightPanel">
+
+<div id="hints">
+<span class="hint" onclick="useHint(0)">💡</span>
+<span class="hint" onclick="useHint(1)">💡</span>
+<span class="hint" onclick="useHint(2)">💡</span>
+</div>
+
 <div id="hearts">❤️❤️❤️</div>
+
+</div>
+
 </div>
 
 <div id="timer">
@@ -158,6 +192,9 @@ let hearts=3
 let score=0
 
 let target=""
+let solutionPair=[]
+
+let hintsLeft=3
 
 let timeLimit=15
 let timeLeft=15
@@ -167,27 +204,6 @@ const grid=document.getElementById("grid")
 const targetEl=document.getElementById("target")
 const heartsEl=document.getElementById("hearts")
 const bar=document.getElementById("bar")
-
-/* Stoffnamen → Formeln */
-
-const substances = {
-
-"Wasserstoff":"H2",
-"Sauerstoff":"O2",
-"Kohlenstoff":"C",
-"Natrium":"Na",
-"Chlor":"Cl2",
-"Stickstoff":"N2",
-"Eisen":"Fe",
-"Magnesium":"Mg",
-"Calciumoxid":"CaO",
-"Wasser":"H2O",
-"Ammoniak":"NH3",
-"Kohlenstoffdioxid":"CO2"
-
-}
-
-/* Reaktionen */
 
 const reactions=[
 
@@ -206,6 +222,8 @@ function randReaction(){
 return reactions[Math.floor(Math.random()*reactions.length)]
 }
 
+/* Board erzeugen mit garantierter Lösung */
+
 function generateBoard(){
 
 board=[]
@@ -213,12 +231,28 @@ grid.innerHTML=""
 
 grid.style.gridTemplateColumns=`repeat(${cols},70px)`
 
-for(let i=0;i<rows*cols;i++){
-
 let r=randReaction()
-let chem=Math.random()<0.5?r.a:r.b
 
-board.push(chem)
+target=r.r
+solutionPair=[r.a,r.b]
+
+targetEl.innerText=target
+
+board.push(r.a)
+board.push(r.b)
+
+while(board.length<rows*cols){
+
+let rr=randReaction()
+board.push(Math.random()<0.5?rr.a:rr.b)
+
+}
+
+/* mischen */
+
+board.sort(()=>Math.random()-0.5)
+
+board.forEach((chem,i)=>{
 
 let d=document.createElement("div")
 d.className="cell"
@@ -228,9 +262,11 @@ d.onclick=()=>selectCell(d,i)
 
 grid.appendChild(d)
 
-}
+})
 
 }
+
+/* Auswahl */
 
 function selectCell(el,i){
 
@@ -249,6 +285,8 @@ checkAnswer()
 }
 
 }
+
+/* Antwort prüfen */
 
 function checkAnswer(){
 
@@ -273,18 +311,15 @@ if(correct){
 score++
 
 selected.forEach(s=>{
-
-let r=randReaction()
-board[s.index]=Math.random()<0.5?r.a:r.b
+let rr=randReaction()
+board[s.index]=Math.random()<0.5?rr.a:rr.b
 s.el.innerText=board[s.index]
-
 s.el.classList.remove("selected")
-
 })
 
 selected=[]
 
-nextTarget()
+nextRound()
 
 }else{
 
@@ -295,24 +330,50 @@ selected=[]
 
 }
 
-function findTarget(){
+/* Tipp-System */
 
-let r=randReaction()
-return r.r
+function useHint(index){
+
+if(hintsLeft<=0) return
+
+let bulbs=document.querySelectorAll(".hint")
+
+if(bulbs[index].innerText=="") return
+
+hintsLeft--
+bulbs[index].innerText=""
+
+let cells=[...document.querySelectorAll(".cell")]
+
+let marked=[]
+
+cells.forEach(c=>{
+if(solutionPair.includes(c.innerText)){
+marked.push(c)
+}
+})
+
+marked.forEach(c=>c.classList.add("hintMark"))
+
+setTimeout(()=>{
+marked.forEach(c=>c.classList.remove("hintMark"))
+},1500)
 
 }
 
-function nextTarget(){
+/* nächste Runde */
+
+function nextRound(){
 
 updateDifficulty()
 
-target=findTarget()
-
-targetEl.innerText=target
+generateBoard()
 
 resetTimer()
 
 }
+
+/* Schwierigkeit */
 
 function updateDifficulty(){
 
@@ -326,9 +387,9 @@ if(score>=50){
 win()
 }
 
-generateBoard()
-
 }
+
+/* Timer */
 
 function resetTimer(){
 
@@ -362,10 +423,12 @@ heartsEl.innerText="❤️".repeat(hearts)
 if(hearts<=0){
 gameOver()
 }else{
-nextTarget()
+nextRound()
 }
 
 }
+
+/* Game Over */
 
 function gameOver(){
 
@@ -378,6 +441,8 @@ document.getElementById("stats").innerText="Score: "+score
 
 }
 
+/* Sieg */
+
 function win(){
 
 clearInterval(timer)
@@ -389,6 +454,8 @@ document.getElementById("stats").innerText="Score: "+score
 
 }
 
+/* Start */
+
 function startGame(){
 
 document.getElementById("panel").style.display="none"
@@ -397,12 +464,15 @@ rows=4
 cols=4
 score=0
 hearts=3
+hintsLeft=3
 timeLimit=15
 
 heartsEl.innerText="❤️❤️❤️"
 
+document.querySelectorAll(".hint").forEach(h=>h.innerText="💡")
+
 generateBoard()
-nextTarget()
+resetTimer()
 
 }
 
