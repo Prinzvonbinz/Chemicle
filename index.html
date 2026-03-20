@@ -83,6 +83,7 @@ margin-top:10px;
 height:100%;
 width:100%;
 background:#4cafef;
+transition:width 0.1s linear;
 }
 
 #grid{
@@ -98,19 +99,14 @@ width:70px;
 height:70px;
 background:#1c2028;
 border-radius:12px;
-
 display:flex;
 justify-content:center;
 align-items:center;
-
 text-align:center;
 padding:5px;
-
 font-size:12px;
 line-height:1.1;
-
 white-space:nowrap;
-
 cursor:pointer;
 }
 
@@ -213,9 +209,9 @@ const targetEl=document.getElementById("target")
 const heartsEl=document.getElementById("hearts")
 const bar=document.getElementById("bar")
 
+/* ✅ FIX: kein doppeltes Array mehr */
 const reactions=[
 
-[
 {a:"Stickstoff",b:"Wasserstoff",r:"N2 + 3H2 -> 2NH3"},
 {a:"Magnesium",b:"Sauerstoff",r:"2Mg + O2 -> 2MgO"},
 {a:"Eisen",b:"Sauerstoff",r:"4Fe + 3O2 -> 2Fe2O3"},
@@ -264,15 +260,12 @@ const reactions=[
 
 {a:"Magnesium",b:"Salzsäure",r:"Mg + 2HCl -> MgCl2 + H2"},
 {a:"Aluminium",b:"Salzsäure",r:"2Al + 6HCl -> 2AlCl3 + 3H2"}
-]
 
 ]
 
 function randReaction(){
 return reactions[Math.floor(Math.random()*reactions.length)]
 }
-
-/* Board erzeugen */
 
 function generateBoard(){
 
@@ -314,8 +307,6 @@ grid.appendChild(d)
 
 }
 
-/* Auswahl */
-
 function selectCell(el,i){
 
 if(el.classList.contains("selected")) return
@@ -334,25 +325,15 @@ checkAnswer()
 
 }
 
-/* Antwort prüfen */
-
+/* ✅ FIX: direkte Lösung prüfen statt loop */
 function checkAnswer(){
 
 let a=selected[0].value
 let b=selected[1].value
 
-let correct=false
-
-reactions.forEach(r=>{
-
-if(
-(r.a==a && r.b==b && r.r==target) ||
-(r.a==b && r.b==a && r.r==target)
-){
-correct=true
-}
-
-})
+let correct=
+(a==solutionPair[0] && b==solutionPair[1]) ||
+(a==solutionPair[1] && b==solutionPair[0])
 
 if(correct){
 
@@ -377,8 +358,6 @@ selected=[]
 }
 
 }
-
-/* Tipp-System */
 
 function useHint(index){
 
@@ -415,19 +394,13 @@ pair.forEach(c=>c.classList.remove("hintMark"))
 
 }
 
-/* nächste Runde */
-
 function nextRound(){
 
 updateDifficulty()
-
 generateBoard()
-
 resetTimer()
 
 }
-
-/* Schwierigkeit */
 
 function updateDifficulty(){
 
@@ -443,8 +416,6 @@ win()
 
 }
 
-/* Timer */
-
 function resetTimer(){
 
 clearInterval(timer)
@@ -458,10 +429,8 @@ timeLeft-=0.1
 bar.style.width=(timeLeft/timeLimit*100)+"%"
 
 if(timeLeft<=0){
-
 clearInterval(timer)
 loseHeart()
-
 }
 
 },100)
@@ -482,8 +451,6 @@ nextRound()
 
 }
 
-/* Game Over */
-
 function gameOver(){
 
 clearInterval(timer)
@@ -495,8 +462,6 @@ document.getElementById("stats").innerText="Score: "+score
 
 }
 
-/* Sieg */
-
 function win(){
 
 clearInterval(timer)
@@ -507,8 +472,6 @@ document.getElementById("result").innerText="Du hast gewonnen!"
 document.getElementById("stats").innerText="Score: "+score
 
 }
-
-/* Start */
 
 function startGame(){
 
